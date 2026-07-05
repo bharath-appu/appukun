@@ -338,15 +338,19 @@
         body: JSON.stringify({ prompt, aspect_ratio, creativity }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        throw new Error(data.error || "Request failed");
+        const err = await res.json().catch(() => ({ error: "Request failed" }));
+        throw new Error(err.error || "Request failed");
       }
 
-      currentImageUrl = data.imageUrl;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      if (currentImageUrl && currentImageUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(currentImageUrl);
+      }
+      currentImageUrl = url;
       document.getElementById("resultImg").src = currentImageUrl;
-      document.getElementById("caption").textContent = data.caption || "";
+      document.getElementById("caption").textContent = "";
       document.getElementById("result").classList.add("show");
     } catch (err) {
       showError(err.message);
@@ -370,17 +374,12 @@
     }
   }
 
-  async function downloadImage() {
+  function downloadImage() {
     if (!currentImageUrl) return;
-    const resp = await fetch(currentImageUrl);
-    const blob = await resp.blob();
-    const ext = blob.type === "image/svg+xml" ? "svg" : "png";
-    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = `appukunimg.${ext}`;
+    a.href = currentImageUrl;
+    a.download = `appukunimg.png`;
     a.click();
-    URL.revokeObjectURL(url);
   }
 
   async function copyImage() {

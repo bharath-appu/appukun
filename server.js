@@ -23,18 +23,28 @@ const creativityModels = {
   high: "flux-schnell",
 };
 
-app.post("/api/generate", (req, res) => {
-  const { prompt, aspect_ratio = "1:1", creativity = "medium" } = req.body;
-  if (!prompt) return res.status(400).json({ error: "Prompt is required" });
+app.post("/api/generate", async (req, res) => {
+  try {
+    const { prompt, aspect_ratio = "1:1", creativity = "medium" } = req.body;
+    if (!prompt) return res.status(400).json({ error: "Prompt is required" });
 
-  const size = aspectSizes[aspect_ratio] || aspectSizes["1:1"];
-  const model = creativityModels[creativity] || "flux";
+    const size = aspectSizes[aspect_ratio] || aspectSizes["1:1"];
+    const model = creativityModels[creativity] || "flux";
 
-  const imageUrl =
-    `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
-    `?width=${size.w}&height=${size.h}&model=${model}&nologo=true&seed=${Math.floor(Math.random() * 999999)}`;
+    const imageUrl =
+      `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
+      `?width=${size.w}&height=${size.h}&model=${model}&nologo=true&seed=${Math.floor(Math.random() * 999999)}`;
 
-  res.json({ imageUrl, caption: "" });
+    const imgResp = await fetch(imageUrl);
+    if (!imgResp.ok) throw new Error(`Pollinations returned HTTP ${imgResp.status}`);
+
+    const buffer = Buffer.from(await imgResp.arrayBuffer());
+    res.set("Content-Type", imgResp.headers.get("content-type") || "image/jpeg");
+    res.set("Content-Length", buffer.length);
+    res.end(buffer);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
 });
 
 if (require.main === module) {
