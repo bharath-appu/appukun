@@ -1,0 +1,16 @@
+{
+  "name": "appukun",
+  "version": "1.0.0",
+  "description": "AI Image Generator",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node server.js",
+    "vercel-dev": "vercel dev"
+  },
+  "engines": {
+    "node": ">=18.x"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
