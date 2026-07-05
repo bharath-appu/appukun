@@ -1,8 +1,9 @@
 const express = require("express");
+const path = require("path");
 const app = express();
 
 app.use(express.json({ limit: "10mb" }));
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
 const aspectSizes = {
   "1:1": { w: 1024, h: 1024 },
